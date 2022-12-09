@@ -5,7 +5,7 @@ import zio._
 import zio.test._
 
 object AdventSuite extends ZIOSpecDefault {
-  final val Days = Chunk(Day1, Day2, Day3, Day4, Day5, Day6, Day7, Day8)
+  final val Days = Chunk(Day1, Day2, Day3, Day4, Day5, Day6, Day7, Day8, Day9)
 
   private def createTests(day: AdventDay) = {
     def doTest(part1: Boolean, dataFile: String, expected: Any) = for {
