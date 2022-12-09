@@ -3,9 +3,8 @@ package aoc
 import zio._
 import enumeratum._
 
-object Day2 extends ZIOAppDefault {
-  final val Test  = false
-  final val Part1 = false
+object Day2 extends AdventDay {
+  override final val day = 2
 
   private def scoreFor(rps: RPS)         = 1 + RPS.values.indexOf(rps)
   private def scoreFor(outcome: Outcome) = 3 * Outcome.values.indexOf(outcome)
@@ -80,17 +79,18 @@ object Day2 extends ZIOAppDefault {
     case object Scissors extends RPS
   }
 
-  private val data = resourceLines(s"2/${if (Test) "test" else "input"}.txt").filterNot(_.isEmpty)
+  private def app(dataFile: String)(f: Play.Parser) = {
+    val data = resourceLines(dataFile).filterNot(_.isEmpty)
 
-  private def app(f: Play.Parser) = {
-    val plays = data.mapZIO(f).tap(_.doDebug)
-    val total = plays.map(_.myScore).runSum
-    total.map(t => s"My total is $t")
+    val plays = data.mapZIO(f) //.tap(_.doDebug)
+    plays.map(_.myScore).runSum
   }
 
-  private val doPart1 = app(Play.createPart1)
-  private val doPart2 = app(Play.createPart2)
+  override def part1TestExpectation: Any           = 15
+  override def part1Expectation: Any               = 9241
+  override def part1(dataFile: String): STask[Any] = app(dataFile)(Play.createPart1)
 
-  override def run: ZIO[ZIOAppArgs with Scope, Any, Any] =
-    (if (Part1) doPart1 else doPart2).flatMap(ZIO.debug(_))
+  override def part2TestExpectation: Any           = 12
+  override def part2Expectation: Any               = 14_610
+  override def part2(dataFile: String): STask[Any] = app(dataFile)(Play.createPart2)
 }

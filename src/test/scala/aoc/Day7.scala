@@ -4,9 +4,8 @@ import zio._
 
 import scala.annotation.tailrec
 
-object Day7 extends ZIOAppDefault {
-  final val Test  = false
-  final val Part1 = false
+object Day7 extends AdventDay {
+  override final val day = 7
 
   private sealed trait Path { self =>
     def parts: Chunk[String] = self match {
@@ -21,8 +20,6 @@ object Day7 extends ZIOAppDefault {
     def unsafeParent: Path = parent.getOrElse(sys.error("Tried to get parent of /"))
   }
   private object Path {
-    def fromParts(parts: String*): Path = parts.foldLeft(Root: Path)(_ / _)
-
     case object Root extends Path
     private final case class NonRoot(parts0: Chunk[String]) extends Path {
       def normalized: Path = if (parts.nonEmpty) this else Root
@@ -105,21 +102,19 @@ object Day7 extends ZIOAppDefault {
     lazy val dirTree: DirTree = DirTree.build(fsEntries)
   }
 
-  private val data = resourceLines(s"7/${if (Test) "test" else "input"}.txt")
-
-  private val directoryTree = {
+  private def directoryTree(dataFile: String) = {
     val cmd       = """^\$ (.+)$""".r
     val cdDir     = """^cd (.+)$""".r
     val dirEntry  = """^dir (.+)$""".r
     val fileEntry = """^(\d+) (.+)$""".r
-    data
+    resourceLines(dataFile)
       .runFold(State()) {
         case (state, cmd(subcmd)) =>
           subcmd match {
-            case "cd /"       => state.modCwd(_ => Path.Root)
-            case "cd .."     => state.modCwd(_.unsafeParent)
+            case "cd /"         => state.modCwd(_ => Path.Root)
+            case "cd .."        => state.modCwd(_.unsafeParent)
             case cdDir(dirName) => state.modCwd(_ / dirName)
-            case "ls"      => state
+            case "ls"           => state
             case _              => sys.error(s"Invalid command $subcmd")
           }
         case (state, dirEntry(dirName))      => state.withEntry(FS.Directory(state.cwd / dirName))
@@ -129,7 +124,10 @@ object Day7 extends ZIOAppDefault {
       .map(_.dirTree)
   }
 
-  private lazy val part1 = directoryTree
+  override def part1TestExpectation: Any = 95_437
+  override def part1Expectation: Any     = 1_432_936
+
+  override def part1(dataFile: String): STask[Any] = directoryTree(dataFile)
     .map(_.fold(0L) {
       case (acc, tree) if tree.isDirectory && tree.sizeOfFileOrContainedFiles <= 100_000 =>
         acc + tree.sizeOfFileOrContainedFiles
@@ -137,19 +135,22 @@ object Day7 extends ZIOAppDefault {
       case (acc, _) => acc
     })
 
-  private lazy val part2 = directoryTree.map { dirTree =>
+  override def part2TestExpectation: Any = 24_933_642
+  override def part2Expectation: Any     = 272_298
+
+  override def part2(dataFile: String): STask[Any] = directoryTree(dataFile).map { dirTree =>
     val totalSpace  = 70_000_000
     val neededSpace = 30_000_000
     val usedSpace   = dirTree.sizeOfFileOrContainedFiles
     val needToFree  = neededSpace - (totalSpace - usedSpace)
 
-    dirTree.fold(Option.empty[Long]) {
-      case (acc, tree) if tree.isDirectory && tree.sizeOfFileOrContainedFiles >= needToFree =>
-        Some(math.min(tree.sizeOfFileOrContainedFiles, acc.getOrElse(Long.MaxValue)))
-      case (acc, _) => acc
-    }
+    dirTree
+      .fold(Option.empty[Long]) {
+        case (acc, tree) if tree.isDirectory && tree.sizeOfFileOrContainedFiles >= needToFree =>
+          Some(math.min(tree.sizeOfFileOrContainedFiles, acc.getOrElse(Long.MaxValue)))
+        case (acc, _) => acc
+      }
+      .get
   }
 
-  override def run: ZIO[ZIOAppArgs with Scope, Any, Any] =
-    (if (Part1) part1 else part2).flatMap(ZIO.debug(_))
 }

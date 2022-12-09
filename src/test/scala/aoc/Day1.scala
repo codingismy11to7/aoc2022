@@ -2,10 +2,15 @@ package aoc
 
 import zio._
 
-object Day1 extends ZIOAppDefault {
-  private val data = resourceLines("1/input.txt")
+object Day1 extends AdventDay {
+  override final val day = 1
 
-  private val highest = data
+  private def data(dataFile: String) = resourceLines(dataFile)
+
+  override def part1TestExpectation: Any = 24_000
+  override def part1Expectation: Any     = 66_186
+
+  override def part1(dataFile: String): STask[Int] = data(dataFile)
     .runFold(Chunk[Int]() -> Int.MinValue) { case ((accCurrItems, currHighest), thisLine) =>
       if (thisLine.isEmpty) {
         val sum = accCurrItems.sum
@@ -17,7 +22,10 @@ object Day1 extends ZIOAppDefault {
     }
     .map(_._2)
 
-  private val topThree = data
+  override def part2TestExpectation: Any = 45_000
+  override def part2Expectation: Any     = 196_804
+
+  override def part2(dataFile: String): STask[Int] = data(dataFile)
     .runFold(Chunk[Int]() -> Chunk[Int]()) { case ((accElves, accCurrElf), thisLine) =>
       if (thisLine.isEmpty) {
         (accElves :+ accCurrElf.sum) -> Chunk()
@@ -26,8 +34,7 @@ object Day1 extends ZIOAppDefault {
         accElves -> (accCurrElf :+ thisValue)
       }
     }
-    .map(_._1.sorted.reverse.take(3).sum)
+    .map { case (accElves, accCurrElf) => if (accCurrElf.nonEmpty) accElves :+ accCurrElf.sum else accElves }
+    .map(_.sorted.reverse.take(3).sum)
 
-  override def run: ZIO[ZIOAppArgs with Scope, Any, Any] =
-    (if (false) highest else topThree).flatMap(ZIO.debug(_))
 }

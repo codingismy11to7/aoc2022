@@ -6,9 +6,8 @@ import zio._
 
 import scala.annotation.tailrec
 
-object Day8 extends ZIOAppDefault {
-  final val Test  = false
-  final val Part1 = false
+object Day8 extends AdventDay {
+  override final val day = 8
 
   private final case class Position(x: Int, y: Int)
 
@@ -93,9 +92,7 @@ object Day8 extends ZIOAppDefault {
       }
   }
 
-  private val data = resourceLines(s"8/${if (Test) "test" else "input"}.txt")
-
-  private val matrix = data.runCollect
+  private def matrix(dataFile: String) = resourceLines(dataFile).runCollect
     .map(_.zipWithIndex.map { case (s, yIdx) =>
       Chunk.fromArray(s.toCharArray).map(_ - '0').zipWithIndex.map { case (h, xIdx) =>
         MatrixSpot(h, Position(xIdx, yIdx))
@@ -105,29 +102,17 @@ object Day8 extends ZIOAppDefault {
 
   private def allSpots(matrix: Matrix) = matrix.m.flatMap(identity)
 
-/*
-  private lazy val part1 = matrix.map { matrix =>
+  override def part1TestExpectation: Any = 21
+  override def part1Expectation: Any     = 1_785
+
+  override def part1(dataFile: String): STask[Any] = matrix(dataFile).map { matrix =>
     allSpots(matrix).count(_.visible(matrix))
   }
 
-  private lazy val part2 = matrix.map { matrix =>
+  override def part2TestExpectation: Any = 8
+  override def part2Expectation: Any     = 345_168
+
+  override def part2(dataFile: String): STask[Any] = matrix(dataFile).map { matrix =>
     allSpots(matrix).map(_.scenicScore(matrix)).max
   }
-*/
-
-  private val both = for {
-    mat <- matrix
-    all = allSpots(mat)
-    start <- Clock.nanoTime
-    vis = all.count(_.visible(mat))
-    visEnd <- Clock.nanoTime
-    ss = all.map(_.scenicScore(mat)).max
-    end <- Clock.nanoTime
-    visElapsed = (visEnd - start).nanos.toMillis
-    elapsed = (end - start).nanos.toMillis
-    _ <- ZIO.debug(s"Visible: $vis (${visElapsed}ms); Highest Score: $ss; runtime: ${elapsed}ms")
-  } yield {}
-
-  override def run: ZIO[ZIOAppArgs with Scope, Any, Any] =
-    both
 }

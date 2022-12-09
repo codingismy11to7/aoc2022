@@ -1,11 +1,9 @@
 package aoc
 
-import zio._
 import zio.stream._
 
-object Day3 extends ZIOAppDefault {
-  final val Test  = false
-  final val Part1 = false
+object Day3 extends AdventDay {
+  override final val day = 3
 
   final case class Line(line: String) {
     lazy val charSet: Set[Char] = line.toSet
@@ -18,16 +16,19 @@ object Day3 extends ZIOAppDefault {
   private def addItemPriorities[E](items: Stream[E, Char]) =
     items.map(item => if (item > 'Z') 1 + (item - 'a') else 27 + (item - 'A')).runSum
 
-  private val lines = resourceLines(s"3/${if (Test) "test" else "input"}.txt").map(Line)
+  private def lines(dataFile: String) = resourceLines(dataFile).map(Line)
 
-  private val part1 = addItemPriorities {
-    lines.map(_.itemSharedBetweenCompartments)
+  override def part1TestExpectation: Any = 157
+  override def part1Expectation: Any     = 8_298
+
+  override def part1(dataFile: String): STask[Any] = addItemPriorities {
+    lines(dataFile).map(_.itemSharedBetweenCompartments)
   }
 
-  private val part2 = addItemPriorities {
-    lines.map(_.charSet).grouped(3).map(_.reduce(_ & _).head)
-  }
+  override def part2TestExpectation: Any = 70
+  override def part2Expectation: Any     = 2_708
 
-  override def run: ZIO[ZIOAppArgs with Scope, Any, Any] =
-    (if (Part1) part1 else part2).flatMap(ZIO.debug(_))
+  override def part2(dataFile: String): STask[Any] = addItemPriorities {
+    lines(dataFile).map(_.charSet).grouped(3).map(_.reduce(_ & _).head)
+  }
 }

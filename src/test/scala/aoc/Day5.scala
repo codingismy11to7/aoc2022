@@ -4,9 +4,8 @@ import zio._
 
 import scala.collection.immutable.ListMap
 
-object Day5 extends ZIOAppDefault {
-  final val Test  = false
-  final val Part1 = false
+object Day5 extends AdventDay {
+  override final val day = 5
 
   private sealed trait CrateSpot
   private object CrateSpot {
@@ -82,20 +81,20 @@ object Day5 extends ZIOAppDefault {
     }
   }
 
-  private val data = resourceLines(s"5/${if (Test) "test" else "input"}.txt")
+  private def app(dataFile: String)(moveProcessor: ParsingState => Move => ParsingState) =
+    resourceLines(dataFile)
+      .runFold(ParsingState()) {
+        case (state, line) if state.parsingDrawing && line.isEmpty => state.finishedParsingDrawing
+        case (state, line) if state.parsingDrawing                 => state.parseDrawingLine(line)
+        case (state, line)                                         => moveProcessor(state)(Move.parseLine(line))
+      }
+      .map(_.stackState.values.map(_.head).mkString)
 
-  private def app(moveProcessor: ParsingState => Move => ParsingState) = data
-    .runFold(ParsingState()) {
-      case (state, line) if state.parsingDrawing && line.isEmpty => state.finishedParsingDrawing
-      case (state, line) if state.parsingDrawing                 => state.parseDrawingLine(line)
-      case (state, line)                                         => moveProcessor(state)(Move.parseLine(line))
-    }
-    .map(_.stackState.values.map(_.head).mkString)
+  override def part1TestExpectation: Any           = "CMZ"
+  override def part1Expectation: Any               = "VPCDMSLWJ"
+  override def part1(dataFile: String): STask[Any] = app(dataFile)(_.processMovePart1)
 
-  private lazy val part1 = app(_.processMovePart1)
-
-  private lazy val part2 = app(_.processMovePart2)
-
-  override def run: ZIO[ZIOAppArgs with Scope, Any, Any] =
-    (if (Part1) part1 else part2).flatMap(ZIO.debug(_))
+  override def part2TestExpectation: Any           = "MCD"
+  override def part2Expectation: Any               = "TPWCGNCCG"
+  override def part2(dataFile: String): STask[Any] = app(dataFile)(_.processMovePart2)
 }
