@@ -68,11 +68,6 @@ object Day9 extends AdventDay {
     else if (aPos.deltX == bPos.deltX)
       bPos.modify(_.deltY).setTo((aPos.deltY + bPos.deltY) / 2)
     else {
-      if (bPos.deltX < aPos.deltX && bPos.deltY < aPos.deltY)
-        bPos.modify(_.deltX)(_ + 1).modify(_.deltY)(_ + 1)
-      else if (bPos.deltX > aPos.deltX && bPos.deltY < aPos.deltY)
-        bPos.modify(_.deltX)(_ - 1).modify(_.deltY)(_ + 1)
-
       val newX = bPos.deltX + (if (bPos.deltX < aPos.deltX) 1 else -1)
       val newY = bPos.deltY + (if (bPos.deltY < aPos.deltY) 1 else -1)
       Position(newX, newY)
