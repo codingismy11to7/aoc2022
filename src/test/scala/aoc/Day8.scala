@@ -105,6 +105,7 @@ object Day8 extends ZIOAppDefault {
 
   private def allSpots(matrix: Matrix) = matrix.m.flatMap(identity)
 
+/*
   private lazy val part1 = matrix.map { matrix =>
     allSpots(matrix).count(_.visible(matrix))
   }
@@ -112,7 +113,21 @@ object Day8 extends ZIOAppDefault {
   private lazy val part2 = matrix.map { matrix =>
     allSpots(matrix).map(_.scenicScore(matrix)).max
   }
+*/
+
+  private val both = for {
+    mat <- matrix
+    all = allSpots(mat)
+    start <- Clock.nanoTime
+    vis = all.count(_.visible(mat))
+    visEnd <- Clock.nanoTime
+    ss = all.map(_.scenicScore(mat)).max
+    end <- Clock.nanoTime
+    visElapsed = (visEnd - start).nanos.toMillis
+    elapsed = (end - start).nanos.toMillis
+    _ <- ZIO.debug(s"Visible: $vis (${visElapsed}ms); Highest Score: $ss; runtime: ${elapsed}ms")
+  } yield {}
 
   override def run: ZIO[ZIOAppArgs with Scope, Any, Any] =
-    (if (Part1) part1 else part2).flatMap(ZIO.debug(_))
+    both
 }
