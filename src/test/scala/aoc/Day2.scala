@@ -1,7 +1,7 @@
 package aoc
 
-import enumeratum._
 import zio._
+import enumeratum._
 
 object Day2 extends ZIOAppDefault {
   final val Test  = false
@@ -91,6 +91,6 @@ object Day2 extends ZIOAppDefault {
   private val doPart1 = app(Play.createPart1)
   private val doPart2 = app(Play.createPart2)
 
-  override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] =
-    (if (Part1) doPart1 else doPart2).flatMap(ZIO.debug(_)).exitCode
+  override def run: ZIO[ZIOAppArgs with Scope, Any, Any] =
+    (if (Part1) doPart1 else doPart2).flatMap(ZIO.debug(_))
 }

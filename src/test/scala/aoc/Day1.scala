@@ -28,7 +28,6 @@ object Day1 extends ZIOAppDefault {
     }
     .map(_._1.sorted.reverse.take(3).sum)
 
-
-  override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] =
-    (if (false) highest else topThree).flatMap(ZIO.debug(_)).exitCode
+  override def run: ZIO[ZIOAppArgs with Scope, Any, Any] =
+    (if (false) highest else topThree).flatMap(ZIO.debug(_))
 }
