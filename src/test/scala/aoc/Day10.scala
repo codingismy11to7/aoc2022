@@ -89,9 +89,9 @@ object Day10 extends AdventDay {
         }
 
         inst match {
-          case Noop => incrementState(state, screen)
+          case Noop => incrementState(state -> screen)
           case AddX(value) =>
-            val (newState, newScreen) = incrementState(incrementState(state, screen))
+            val (newState, newScreen) = incrementState(incrementState(state -> screen))
             newState.modify(_.register)(_ + value) -> newScreen
         }
       }
