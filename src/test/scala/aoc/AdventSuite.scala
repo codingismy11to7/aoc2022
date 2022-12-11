@@ -5,7 +5,7 @@ import zio._
 import zio.test._
 
 object AdventSuite extends ZIOSpecDefault {
-  final val Days = Chunk(Day1, Day2, Day3, Day4, Day5, Day6, Day7, Day8, Day9, Day10)
+  final val Days = Chunk(Day1, Day2, Day3, Day4, Day5, Day6, Day7, Day8, Day9, Day10, Day11)
 
   private def createTests(day: AdventDay) = {
     def doTest(part1: Boolean, dataFile: String, expected: Any) = for {
@@ -47,5 +47,5 @@ object AdventSuite extends ZIOSpecDefault {
   private def createDays = Days.map(createDay)
 
   override def spec: Spec[TestEnvironment with Scope, Any] =
-    suite("Advent of Code")(createDays: _*) @@ TestAspect.timed @@ TestAspect.sequential
+    suite("Advent of Code")(createDays: _*).filterLabels(_ == "Day 11").get @@ TestAspect.timed @@ TestAspect.sequential
 }
