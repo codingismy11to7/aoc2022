@@ -47,5 +47,5 @@ object AdventSuite extends ZIOSpecDefault {
   private def createDays = Days.map(createDay)
 
   override def spec: Spec[TestEnvironment with Scope, Any] =
-    suite("Advent of Code")(createDays: _*).filterLabels(_ == "Day 11").get @@ TestAspect.timed @@ TestAspect.sequential
+    suite("Advent of Code")(createDays: _*) @@ TestAspect.timed @@ TestAspect.sequential
 }
