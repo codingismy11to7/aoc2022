@@ -13,6 +13,7 @@ val V = new {
   val betterMonadicFor = "0.3.1"
   val chimney          = "0.6.2"
   val enumeratum       = "1.7.0"
+  val graph            = "1.13.5"
   val quicklens        = "1.8.10"
   val zio              = "2.0.4"
   val zioJson          = "0.3.0"
@@ -43,9 +44,10 @@ lazy val root = (project in file("."))
       "io.scalaland"               %% "chimney"     % V.chimney,
     ),
     libraryDependencies ++= Seq(
-      "dev.zio" %% "zio-nio"      % V.zioNio,
-      "dev.zio" %% "zio-process"  % V.zioProcess,
-      "dev.zio" %% "zio-test"     % V.zio,
-      "dev.zio" %% "zio-test-sbt" % V.zio,
+      "dev.zio"         %% "zio-nio"      % V.zioNio,
+      "dev.zio"         %% "zio-process"  % V.zioProcess,
+      "dev.zio"         %% "zio-test"     % V.zio,
+      "dev.zio"         %% "zio-test-sbt" % V.zio,
+      "org.scala-graph" %% "graph-core"   % V.graph,
     ).map(_ % Test),
   )
