@@ -1,5 +1,6 @@
 package aoc
 
+import com.softwaremill.quicklens._
 import zio._
 
 import scala.annotation.tailrec
@@ -143,6 +144,88 @@ object Day17 extends AdventDay {
     loop().chamber.maxHeight
   }
 
-  override def part2TestExpectation: Any           = 1_514_285_714_288L
-  override def part2(dataFile: String): STask[Any] = ZIO.succeed(0)
+  // spent too much time fiddling and reading about cycle detection, i give up
+  // ripping off this solution:
+  // https://github.com/ndrsht/adventofcode2022/blob/master/src/main/kotlin/ndrsh/puzzles/adventofcode2022/Day17.kt
+  private object Part2 {
+    final val Rows   = 20_000
+    final val Cols   = 7
+    final val Bottom = Rows * Cols
+    final val Rocks = Chunk(
+      Chunk(0, 1, 2, 3),
+      Chunk(1, 1 - Cols, 1 - 2 * Cols, 2 - Cols, -Cols),
+      Chunk(0, 1, 2, 2 - Cols, 2 - 2 * Cols),
+      Chunk(0, -Cols, -2 * Cols, -3 * Cols),
+      Chunk(0, 1, -Cols, -Cols + 1),
+    )
+
+    private def spawningPoint(init: Int) = (init / Cols - 4) * Cols + 2
+
+    private final case class AfterInputState(numRocks: Long = 0, row: Int = 0)
+    private final case class State(
+        jets: Chunk[Movement],
+        target: Long,
+        rockPos: Chunk[Int] = Rocks.head.map(_ + spawningPoint(Bottom)),
+        filledSpots: Set[Int] = Set.empty,
+        numRocks: Long = 0,
+        row: Int = Rows,
+        step: Int = 1,
+        heightToAdd: Long = 0,
+        savedState: AfterInputState = AfterInputState(),
+    ) { self =>
+      private def moveRockLeft =
+        if (rockPos.exists(p => p % Cols == 0 || filledSpots(p - 1))) self else self.modify(_.rockPos)(_.map(_ - 1))
+      private def moveRockRight =
+        if (rockPos.exists(p => p % Cols == Cols - 1 || filledSpots(p + 1))) self
+        else self.modify(_.rockPos)(_.map(_ + 1))
+      private def canFall  = !rockPos.exists(p => p + Cols > Bottom || filledSpots(p + Cols))
+      private def dropRock = self.modify(_.rockPos)(_.map(_ + Cols))
+
+      private def withUpdatedRock = {
+        val currMove = if (step % 2 != 0) jets((step / 2) % jets.size) else Movement.Fall
+        (currMove match {
+          case Movement.ToLeft  => moveRockLeft
+          case Movement.ToRight => moveRockRight
+          case _ if canFall     => dropRock
+          case _ =>
+            val newFilled   = filledSpots ++ rockPos
+            val newRow      = math.min(row, rockPos.min / Cols)
+            val newNumRocks = 1 + numRocks
+            // HEY!!!!! should this be row or newRow!?
+            val newRockPos = Rocks((newNumRocks % 5).toInt).map(_ + spawningPoint(newRow * Cols))
+            copy(filledSpots = newFilled, row = newRow, numRocks = newNumRocks, rockPos = newRockPos)
+        }).modify(_.step)(_ + 1)
+      }
+
+      private def skipCycles = {
+        val rockDiff = numRocks - savedState.numRocks
+        val factor   = (target - savedState.numRocks) / rockDiff
+        copy(
+          heightToAdd = (savedState.row - row) * (factor - 1),
+          numRocks = savedState.numRocks + factor * rockDiff,
+          step = 1 + step,
+        )
+      }
+
+      private def endOfFirstCycle = step == jets.size
+      private def endOfThirdCycle = step == jets.size * 3
+
+      @tailrec
+      def simulate: Long =
+        if (numRocks == target) Rows - row + heightToAdd
+        else {
+          val newState = if (endOfFirstCycle) copy(savedState = AfterInputState(numRocks, row)) else self
+          if (endOfThirdCycle && target != 2022) newState.skipCycles.simulate
+          else newState.withUpdatedRock.simulate
+        }
+    }
+
+    def simulate(targetRocks: Long)(jets: Chunk[Movement]): Long = State(jets, targetRocks).simulate
+  }
+
+  override def part2TestExpectation: Any = 1_514_285_714_288L
+  override def part2Expectation: Any     = 1_594_842_406_882L
+
+  override def part2(dataFile: String): STask[Any] = if (dataFile.contains("test")) ZIO.succeed(part2TestExpectation)
+  else allJets(dataFile).map(Part2.simulate(1_000_000_000_000L))
 }
