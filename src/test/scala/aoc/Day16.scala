@@ -67,8 +67,7 @@ object Day16 extends AdventDay {
   override def part1TestExpectation: Any = 1651
   override def part1Expectation: Any     = 2183
 
-  /*override*/
-  def part1X(dataFile: String): STask[Any] = graphAndValves(dataFile).flatMap { case (v, valves) =>
+  override def part1(dataFile: String): STask[Any] = graphAndValves(dataFile).flatMap { case (v, valves) =>
     val unopened = valves.filter(_.flowRate > 0).toSet
     val at       = valves.find(_.label == "AA").getOrElse(sys.error("Couldn't find starting valve"))
     findLargestRelease(at, unopened, State(30, 0, Chunk.empty)).provide(ZLayer.succeed(v)).map(_.willBeReleased)
@@ -105,6 +104,7 @@ object Day16 extends AdventDay {
   }
 
   override def part2TestExpectation: Any = 1707
+  override def part2Expectation: Any     = 2911
 
   override def part2(dataFile: String): STask[Any] = graphsAndValves(dataFile).flatMap { case (_, w, valves) =>
     val unopened = valves.filter(_.flowRate > 0)
@@ -126,22 +126,24 @@ object Day16 extends AdventDay {
           }
           .map(_.flatten)
 
-    (ZIO.debug("calculating all paths") *> allPaths(aa, unopened, Path(26))).flatMap { ps =>
-      println(s"got ${ps.size} paths, getting valid")
+    (ZIO.debug("calculating all paths").when(false) *> allPaths(aa, unopened, Path(26))).flatMap { ps =>
+//      println(s"got ${ps.size} paths, getting valid")
       val valid = ps.filter(_.valid)
       val justA = Set(aa)
-      println(s"got ${valid.size} valid, calculating scores")
+//      println(s"got ${valid.size} valid, calculating scores")
       ZIO
         .foreachPar(valid) { a =>
-          ZIO
-            .foreachPar(valid) { b =>
-              ZIO.succeed(Option.when((a.containedValves & b.containedValves) == justA)(a.released + b.released))
-            }
-            .map(_.flatten)
+          ZIO.succeed {
+            for {
+              b  <- valid
+              int = a.containedValves & b.containedValves
+              if int == justA
+            } yield a.released + b.released
+          }
         }
         .map(_.flatten[Int])
         .map { scores =>
-          println("got scores, getting highest")
+//          println("got scores, getting highest")
           scores.max
         }
     }
