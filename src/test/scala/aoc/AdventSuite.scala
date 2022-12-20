@@ -24,6 +24,7 @@ object AdventSuite extends ZIOSpecDefault {
 //    Day16,
     Day17,
     Day18,
+//    Day19,
   )
 
   private def createTests(day: AdventDay) = {
