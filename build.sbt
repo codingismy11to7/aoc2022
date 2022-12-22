@@ -13,6 +13,7 @@ val V = new {
   val betterMonadicFor = "0.3.1"
   val chimney          = "0.6.2"
   val enumeratum       = "1.7.0"
+  val fastparse        = "2.3.3"
   val graph            = "1.13.5"
   val quicklens        = "1.8.10"
   val zio              = "2.0.4"
@@ -44,6 +45,7 @@ lazy val root = (project in file("."))
       "io.scalaland"               %% "chimney"     % V.chimney,
     ),
     libraryDependencies ++= Seq(
+      "com.lihaoyi"     %% "fastparse"    % V.fastparse,
       "dev.zio"         %% "zio-nio"      % V.zioNio,
       "dev.zio"         %% "zio-process"  % V.zioProcess,
       "dev.zio"         %% "zio-test"     % V.zio,
